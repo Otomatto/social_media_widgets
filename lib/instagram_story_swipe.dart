@@ -72,11 +72,14 @@ class _InstagramStorySwipeState extends State<InstagramStorySwipe> {
         } else {
           value = _pageController.page;
         }
-        return _SwipeWidget(
-          index: index,
-          pageNotifier: value,
-          child: widget.children[index],
-        );
+        return Stack(children: [
+          _SwipeWidget(
+            index: index,
+            pageNotifier: value,
+            child: widget.children[index],
+          ),
+          Text('$index ${widget.children.length}'),
+        ]);
       },
     );
   }
@@ -122,5 +125,58 @@ class _SwipeWidget extends StatelessWidget {
         ],
       ),
     );
+  }
+}
+
+/// Custom progress bar. Supposed to be lighter than the
+/// original [ProgressIndicator], and rounded at the sides.
+class StoryProgressIndicator extends StatelessWidget {
+  /// From `0.0` to `1.0`, determines the progress of the indicator
+  final double value;
+  final double indicatorHeight;
+
+  StoryProgressIndicator(
+    this.value, {
+    this.indicatorHeight = 5,
+  }) : assert(indicatorHeight != null && indicatorHeight > 0,
+            "[indicatorHeight] should not be null or less than 1");
+
+  @override
+  Widget build(BuildContext context) {
+    return CustomPaint(
+      size: Size.fromHeight(
+        this.indicatorHeight,
+      ),
+      foregroundPainter: IndicatorOval(
+        Colors.white.withOpacity(0.8),
+        this.value,
+      ),
+      painter: IndicatorOval(
+        Colors.white.withOpacity(0.4),
+        1.0,
+      ),
+    );
+  }
+}
+
+class IndicatorOval extends CustomPainter {
+  final Color color;
+  final double widthFactor;
+
+  IndicatorOval(this.color, this.widthFactor);
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()..color = this.color;
+    canvas.drawRRect(
+        RRect.fromRectAndRadius(
+            Rect.fromLTWH(0, 0, size.width * this.widthFactor, size.height),
+            Radius.circular(3)),
+        paint);
+  }
+
+  @override
+  bool shouldRepaint(CustomPainter oldDelegate) {
+    return true;
   }
 }
