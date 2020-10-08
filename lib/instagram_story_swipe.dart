@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:math';
 import 'dart:ui';
 
@@ -26,7 +27,7 @@ class _InstagramStorySwipeState extends State<InstagramStorySwipe> {
   PageController _pageController;
   double currentPageValue = 0.0;
 
-//  Timer _timer;
+  Timer timer;
 
   @override
   void initState() {
@@ -43,14 +44,15 @@ class _InstagramStorySwipeState extends State<InstagramStorySwipe> {
       widget.instagramSwipeController.pageController = _pageController;
     }
 
-//    _timer = Timer.periodic(Duration(seconds: 5), (timer) {
-//      if (_pageController.page < widget.children.length - 1) {
-//        _pageController.nextPage(
-//            duration: Duration(milliseconds: 500), curve: Curves.linear);
-//      } else {
-//        timer.cancel();
-//      }
-//    });
+    timer = Timer.periodic(Duration(seconds: 5), (timer) {
+      if (_pageController.page < widget.children.length - 1) {
+        _pageController.nextPage(
+            duration: Duration(milliseconds: 500), curve: Curves.linear);
+      } else {
+        timer.cancel();
+        Navigator.pop(context);
+      }
+    });
   }
 
   @override
@@ -74,11 +76,11 @@ class _InstagramStorySwipeState extends State<InstagramStorySwipe> {
         }
         return Stack(children: [
           _SwipeWidget(
+            lenght: widget.children.length,
             index: index,
             pageNotifier: value,
             child: widget.children[index],
           ),
-          Text('$index ${widget.children.length}'),
         ]);
       },
     );
@@ -89,6 +91,7 @@ num degToRad(num deg) => deg * (pi / 180.0);
 
 class _SwipeWidget extends StatelessWidget {
   final int index;
+  final int lenght;
 
   final double pageNotifier;
 
@@ -99,6 +102,7 @@ class _SwipeWidget extends StatelessWidget {
     @required this.index,
     @required this.pageNotifier,
     @required this.child,
+    this.lenght,
   }) : super(key: key);
 
   @override
@@ -122,8 +126,83 @@ class _SwipeWidget extends StatelessWidget {
               child: SizedBox.shrink(),
             ),
           ),
+          SafeArea(
+            child: StoryProgress(
+              index: index,
+              lenght: lenght,
+            ),
+          ),
         ],
       ),
+    );
+  }
+}
+
+class StoryProgress extends StatefulWidget {
+  final int lenght;
+  final int index;
+
+  const StoryProgress({Key key, this.lenght, this.index}) : super(key: key);
+
+  @override
+  _StoryProgressState createState() => _StoryProgressState();
+}
+
+class _StoryProgressState extends State<StoryProgress>
+    with SingleTickerProviderStateMixin {
+  double animatedValue = 0;
+  AnimationController controller;
+
+  List<Widget> children() {
+    List<Widget> list = [];
+    for (var i = 0; i < widget.lenght; i++) {
+      double value = i < widget.index ? 1 : 0;
+      if (widget.index == i) {
+        list.add(Expanded(
+            flex: 1,
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 4.0),
+              child: StoryProgressIndicator(animatedValue),
+            )));
+      } else {
+        list.add(Expanded(
+            flex: 1,
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 4.0),
+              child: StoryProgressIndicator(value),
+            )));
+      }
+    }
+    return list;
+  }
+
+  @override
+  void initState() {
+    // TODO: implement initState
+    super.initState();
+    controller = AnimationController(
+      duration: const Duration(seconds: 5),
+      vsync: this,
+    );
+    controller.forward();
+    controller.addListener(() {
+      setState(() {
+        animatedValue = controller.value;
+      });
+    });
+  }
+
+  @override
+  void dispose() {
+    // TODO: implement dispose
+    controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: children(),
     );
   }
 }
