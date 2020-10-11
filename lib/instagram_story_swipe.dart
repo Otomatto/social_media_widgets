@@ -49,8 +49,8 @@ class _InstagramStorySwipeState extends State<InstagramStorySwipe> {
         _pageController.nextPage(
             duration: Duration(milliseconds: 500), curve: Curves.linear);
       } else {
-        timer.cancel();
         Navigator.pop(context);
+        timer.cancel();
       }
     });
   }
@@ -75,11 +75,32 @@ class _InstagramStorySwipeState extends State<InstagramStorySwipe> {
           value = _pageController.page;
         }
         return Stack(children: [
-          _SwipeWidget(
-            lenght: widget.children.length,
-            index: index,
-            pageNotifier: value,
-            child: widget.children[index],
+          GestureDetector(
+            onTapDown: (TapDownDetails details) {},
+            onTapUp: (TapUpDetails details) {
+              if (MediaQuery.of(context).size.width / 2 <
+                  details.localPosition.dx) {
+                if (_pageController.page < widget.children.length - 1) {
+                  _pageController.nextPage(
+                      duration: Duration(milliseconds: 500),
+                      curve: Curves.linear);
+                } else {
+                  Navigator.pop(context);
+                }
+              } else {
+                if (_pageController.page - 1 >= 0) {
+                  _pageController.previousPage(
+                      duration: Duration(milliseconds: 500),
+                      curve: Curves.linear);
+                }
+              }
+            },
+            child: _SwipeWidget(
+              lenght: widget.children.length,
+              index: index,
+              pageNotifier: value,
+              child: widget.children[index],
+            ),
           ),
         ]);
       },
